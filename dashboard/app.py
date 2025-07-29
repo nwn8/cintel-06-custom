@@ -10,6 +10,7 @@ import plotly.express as px
 from scipy import stats
 from shinywidgets import render_plotly
 from shinyswatch import theme
+import pathlib
 
 DEQUE_SIZE: int = 5
 reactive_value_wrapper_aapl= reactive.value(deque(maxlen=DEQUE_SIZE))
@@ -20,6 +21,8 @@ reactive_value_wrapper_msft= reactive.value(deque(maxlen=DEQUE_SIZE))
 stocks={"NVDA":"NVDA","AAPL":"AAPL","MSFT":"MSFT"}
 
 
+file=pathlib.Path(__file__).parent / "nfl_2024.csv"
+
 # ------------------------------------------------
 # This refreshes the page
 # ------------------------------------------------
@@ -27,6 +30,9 @@ stocks={"NVDA":"NVDA","AAPL":"AAPL","MSFT":"MSFT"}
 UPDATE_INTERVAL_SECS: int = 30
 
 
+@reactive.file_reader(file)
+def read_file():
+        return pd.read_csv(file)
 
 
 # ------------------------------------------------
@@ -60,7 +66,7 @@ with ui.sidebar(open="open"):
 # In Shiny Express, everything not in the sidebar is in the main panel
 #---------------------------------------------------------------------
 
-with ui.layout_columns():
+with ui.layout_columns(min_height="200px"):
     with ui.value_box( theme="bg-gradient-blue-purple"):
         @render.text
         def value():
@@ -86,8 +92,9 @@ with ui.layout_columns():
             deque_snapshot,df, latest_price= reactive_calc_combined()
             pd.set_option('display.width', None)        # Use maximum width
             return render.DataGrid( df,width="100%")
-    
-with ui.card(full_screen=True):
+
+with ui.layout_columns(max_height="400px"):    
+    with ui.card(full_screen=False,height="200px"):
        
         @render_plotly
         def display_plott():
@@ -98,7 +105,10 @@ with ui.card(full_screen=True):
             # Convert the 'timestamp' column to datetime for better plotting
                 fig=px.line(df,x="timestamp", y="price", title="Chart")
                 return fig
-
+    with ui.card(full_screen=False,height="200px"):
+        @render.table
+        def result():
+            return read_file()
 
 @reactive.calc()
 def reactive_calc_combined():

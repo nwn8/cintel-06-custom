@@ -92,7 +92,7 @@ shinylive
 shinywidgets
 requests
 shinyswatch
-
+pathlib
 
 # to run shiny app locally
 
